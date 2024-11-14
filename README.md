@@ -1,6 +1,8 @@
 ### Escuela Colombiana de Ingeniería
 ### Arquitecturas de Software - ARSW
 
+### Jeisson Steban Casallas Rozo y David Leonardo Piñeros Cortes. 
+
 ## Escalamiento en Azure con Maquinas Virtuales, Sacale Sets y Service Plans
 
 ### Dependencias
