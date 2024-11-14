@@ -196,7 +196,10 @@ Cambiar el tamaño implica un reinicio de la VM, lo que puede afectar la disponi
 
 11. Aumente la cantidad de ejecuciones paralelas del comando de postman a `4`. ¿El comportamiento del sistema es porcentualmente mejor?
 
-**Rta/:** pendiente.
+**Rta/:** 
+![](images/35.PNG)
+
+No podemos evidenciar una mejoria en el comportamiento del sistema en este caso.
 
 ### Parte 2 - Escalabilidad horizontal
 
@@ -244,6 +247,10 @@ Ahora vamos a crear 3 VMs (VM1, VM2 y VM3) con direcciones IP públicas standar 
 
 ![](images/part2/part2-vm-create1.png)
 
+![](images/25.PNG)
+
+No es posible agreagar una tercera maquina debido al limite de recursos de la subscripción de estudiante, por lo que se realizo con dos.
+
 2. En la configuración de networking, verifique que se ha seleccionado la *Virtual Network*  y la *Subnet* creadas anteriormente. Adicionalmente asigne una IP pública y no olvide habilitar la redundancia de zona.
 
 ![](images/part2/part2-vm-create2.png)
@@ -252,9 +259,13 @@ Ahora vamos a crear 3 VMs (VM1, VM2 y VM3) con direcciones IP públicas standar 
 
 ![](images/part2/part2-vm-create3.png)
 
+![](images/26.PNG)
+
 4. Ahora asignaremos esta VM a nuestro balanceador de carga, para ello siga la configuración de la siguiente imágen.
 
 ![](images/part2/part2-vm-create4.png)
+
+![](images/27.PNG)
 
 5. Finalmente debemos instalar la aplicación de Fibonacci en la VM. para ello puede ejecutar el conjunto de los siguientes comandos, cambiando el nombre de la VM por el correcto
 
@@ -274,6 +285,8 @@ forever start FibonacciApp.js
 
 Realice este proceso para las 3 VMs, por ahora lo haremos a mano una por una, sin embargo es importante que usted sepa que existen herramientas para aumatizar este proceso, entre ellas encontramos Azure Resource Manager, OsDisk Images, Terraform con Vagrant y Paker, Puppet, Ansible entre otras.
 
+![](images/28.PNG)
+
 #### Probar el resultado final de nuestra infraestructura
 
 1. Porsupuesto el endpoint de acceso a nuestro sistema será la IP pública del balanceador de carga, primero verifiquemos que los servicios básicos están funcionando, consuma los siguientes recursos:
@@ -282,8 +295,20 @@ Realice este proceso para las 3 VMs, por ahora lo haremos a mano una por una, si
 http://52.155.223.248/
 http://52.155.223.248/fibonacci/1
 ```
+![](images/29.PNG)
+![](images/30.PNG)
 
 2. Realice las pruebas de carga con `newman` que se realizaron en la parte 1 y haga un informe comparativo donde contraste: tiempos de respuesta, cantidad de peticiones respondidas con éxito, costos de las 2 infraestrucruras, es decir, la que desarrollamos con balanceo de carga horizontal y la que se hizo con una maquina virtual escalada.
+
+El rendimiento de las máquinas virtuales con el balanceo de carga es mejor que el rendimiento de las máquinas virtuales con escalamiento vertical, ya que las máquinas virtuales con el balanceo de carga procesan más peticiones en menos tiempo.
+
+![](images/33.PNG)
+![](images/34.PNG)
+
+Al revisar los tiempos de ejecución obtenidos entre el balaencio de carga y el escalamiento vertical podemos ver que los tiempos de ejecución disminuyen considerablemente a pesar de solo tener dos maquinas virtuales, ademas de que el uso de CPU tambien debido a que distribuye las peticiones, por lo que llegamos a que es mas eficiente.
+
+![](images/31.PNG)
+![](images/32.PNG)
 
 3. Agregue una 4 maquina virtual y realice las pruebas de newman, pero esta vez no lance 2 peticiones en paralelo, sino que incrementelo a 4. Haga un informe donde presente el comportamiento de la CPU de las 4 VM y explique porque la tasa de éxito de las peticiones aumento con este estilo de escalabilidad.
 
@@ -293,18 +318,89 @@ newman run ARSW_LOAD-BALANCING_AZURE.postman_collection.json -e [ARSW_LOAD-BALAN
 newman run ARSW_LOAD-BALANCING_AZURE.postman_collection.json -e [ARSW_LOAD-BALANCING_AZURE].postman_environment.json -n 10 &
 newman run ARSW_LOAD-BALANCING_AZURE.postman_collection.json -e [ARSW_LOAD-BALANCING_AZURE].postman_environment.json -n 10
 ```
+No es posible agreagr una cuarta maquina debido al limite de recursos de la subscripción de estudiante.
 
 **Preguntas**
 
 * ¿Cuáles son los tipos de balanceadores de carga en Azure y en qué se diferencian?, ¿Qué es SKU, qué tipos hay y en qué se diferencian?, ¿Por qué el balanceador de carga necesita una IP pública?
+
+**RTA:**
+
+**Tipos de Balanceadores de Carga en Azure**
+
+**El Balanceador Público** distribuye el tráfico desde internet hacia las instancias de servicio en la red de Azure.
+**El Balanceador Privado** gestiona el tráfico dentro de la red privada, sin exposición directa a internet.
+
+La principal diferencia radica en la accesibilidad; el balanceador público tiene una IP pública que permite el acceso desde fuera de Azure, mientras que el balanceador privado se usa solo para tráfico interno en la red virtual.
+
+**SKU (Stock Keeping Unit)**
+
+SKU en Azure representa una "unidad de mantenimiento de existencias", un identificador de versión para los recursos que indica características y capacidades.
+
+**Básico:** Para necesidades de balanceo de carga de baja complejidad; ofrece menos configuraciones y soporte limitado para funciones avanzadas.
+**Estándar:** Ofrece mayor control, seguridad, escalabilidad y compatibilidad con la mayoría de las funciones avanzadas de Azure.
+
+La diferencia radica en que la SKU estándar admite más funciones de seguridad, mayor escala y rendimiento, y tiene costos más altos en comparación con la básica.
+
+**Necesidad de una IP Pública para el Balanceador de Carga**
+
+El balanceador de carga necesita una IP pública para distribuir tráfico de red desde internet a los recursos internos en Azure. Sin esta IP, el balanceador no podría enrutar el tráfico externo a la red de Azure.
+
 * ¿Cuál es el propósito del *Backend Pool*?
+
+**RTA:**
+
+El objetivo del backend pool es proporcionar un grupo de recursos que se puedan asignar a las solicitudes de los usuarios. Esto se utiliza para escalar el rendimiento de una aplicación web o API, de forma que se pueda mejorar la disponibilidad de la aplicación y que esta escale de forma automatica para satisfacer una cierta demanda de usuarios.
+
 * ¿Cuál es el propósito del *Health Probe*?
+
+**RTA:**
+
+Tal como su nombre lo dice, esta nos ayuda a determinar el estado de salud de un servicio. Esto se utiliza mayormente para sistemas distribuidos garantizando que esten disponibles y funcionando correctamente por medio de verificaciones que realiza en base a las respuestas obtenidas del backend donde valida que cumpla con los criterios establecidos, esto con el fin de mejorar la escalibilidad dinamica y optimizar el rendimiento del sistema.
+
 * ¿Cuál es el propósito de la *Load Balancing Rule*? ¿Qué tipos de sesión persistente existen, por qué esto es importante y cómo puede afectar la escalabilidad del sistema?.
+
+**RTA:**
+a Load Balancing Rule define cómo se distribuye el tráfico entre las instancias del Backend Pool, especificando los puertos de entrada y salida, así como el protocolo. Esto permite controlar el flujo de tráfico.
+
+**Tipos de sesión persistente**
+Sesión basada en IP (Hash de IP): 
+Sesión basada en puerto (Hash de 5-tuplas)
+
+La persistencia de sesión es crucial para aplicaciones que dependen del estado de la conexión, sin embargo, La sesión persistente puede limitar la flexibilidad para distribuir tráfico de manera uniforme, afectando la capacidad de escalado.
+
+
 * ¿Qué es una *Virtual Network*? ¿Qué es una *Subnet*? ¿Para qué sirven los *address space* y *address range*?
+
+**RTA:**
+
+**Virtual Network (VNet):** Es una red lógica en Azure que permite la comunicación entre recursos de la misma red.
+**Subnet:** Una subdivisión de la VNet que permite organizar y aislar los recursos dentro de la misma red virtual.
+
+**Address Space y Address** Range definen los rangos de IP dentro de la VNet y sus subredes, permitiendo controlar la asignación de IP y evitar conflictos.
+
 * ¿Qué son las *Availability Zone* y por qué seleccionamos 3 diferentes zonas?. ¿Qué significa que una IP sea *zone-redundant*?
+
+**RTA:**
+
+Las Availability Zones son zonas físicas aisladas dentro de una región de Azure, cada una con su propia infraestructura.
+
+Seleccionar múltiples zonas permite alta disponibilidad y redundancia en caso de fallos de hardware o energía en una zona específica.
+
+La Zone-Redundant IP es una IP que funciona de forma redundante entre múltiples zonas, manteniendo conectividad incluso si una zona falla.
+
 * ¿Cuál es el propósito del *Network Security Group*?
+
+**RTA:**
+El NSG es un firewall que controla el tráfico de red hacia y desde los recursos de Azure en una red virtual, utilizando reglas de entrada y salida para definir qué tráfico se permite o bloquea.
+
 * Informe de newman 1 (Punto 2)
+
 * Presente el Diagrama de Despliegue de la solución.
+
+**RTA:**
+
+![](images/Despliegue.PNG)
 
 
 
