@@ -25,11 +25,22 @@ Cuando un conjunto de usuarios consulta un enésimo número (superior a 1000000)
 
 ![Imágen 1](images/part1/part1-vm-basic-config.png)
 
+**SOLUCIÓN:** 
+![](images/01.PNG)
+![](images/02.PNG)
+
 2. Para conectarse a la VM use el siguiente comando, donde las `x` las debe remplazar por la IP de su propia VM (Revise la sección "Connect" de la virtual machine creada para tener una guía más detallada).
 
     `ssh scalability_lab@xxx.xxx.xxx.xxx`
 
+
 3. Instale node, para ello siga la sección *Installing Node.js and npm using NVM* que encontrará en este [enlace](https://linuxize.com/post/how-to-install-node-js-on-ubuntu-18.04/).
+
+**SOLUCIÓN:** 
+![](images/03.PNG)
+![](images/04.PNG)
+![](images/05.PNG)
+![](images/06.PNG)
 4. Para instalar la aplicación adjunta al Laboratorio, suba la carpeta `FibonacciApp` a un repositorio al cual tenga acceso y ejecute estos comandos dentro de la VM:
 
     `git clone <your_repo>`
@@ -38,13 +49,20 @@ Cuando un conjunto de usuarios consulta un enésimo número (superior a 1000000)
 
     `npm install`
 
+![](images/07.PNG)
+
 5. Para ejecutar la aplicación puede usar el comando `npm FibinacciApp.js`, sin embargo una vez pierda la conexión ssh la aplicación dejará de funcionar. Para evitar ese compartamiento usaremos *forever*. Ejecute los siguientes comando dentro de la VM.
 
     ` node FibonacciApp.js`
 
+![](images/09.PNG)
+
 6. Antes de verificar si el endpoint funciona, en Azure vaya a la sección de *Networking* y cree una *Inbound port rule* tal como se muestra en la imágen. Para verificar que la aplicación funciona, use un browser y user el endpoint `http://xxx.xxx.xxx.xxx:3000/fibonacci/6`. La respuesta debe ser `The answer is 8`.
 
 ![](images/part1/part1-vm-3000InboudRule.png)
+
+![](images/08.PNG)
+![](images/10.PNG)
 
 7. La función que calcula en enésimo número de la secuencia de Fibonacci está muy mal construido y consume bastante CPU para obtener la respuesta. Usando la consola del Browser documente los tiempos de respuesta para dicho endpoint usando los siguintes valores:
     * 1000000
@@ -58,9 +76,13 @@ Cuando un conjunto de usuarios consulta un enésimo número (superior a 1000000)
     * 1080000
     * 1090000    
 
+![](images/11.PNG)
+
 8. Dírijase ahora a Azure y verifique el consumo de CPU para la VM. (Los resultados pueden tardar 5 minutos en aparecer).
 
 ![Imágen 2](images/part1/part1-vm-cpu.png)
+
+![](images/12.PNG)
 
 9. Ahora usaremos Postman para simular una carga concurrente a nuestro sistema. Siga estos pasos.
     * Instale newman con el comando `npm install newman -g`. Para conocer más de Newman consulte el siguiente [enlace](https://learning.getpostman.com/docs/postman/collection-runs/command-line-integration-with-newman/).
@@ -72,30 +94,109 @@ Cuando un conjunto de usuarios consulta un enésimo número (superior a 1000000)
     newman run ARSW_LOAD-BALANCING_AZURE.postman_collection.json -e [ARSW_LOAD-BALANCING_AZURE].postman_environment.json -n 10 &
     newman run ARSW_LOAD-BALANCING_AZURE.postman_collection.json -e [ARSW_LOAD-BALANCING_AZURE].postman_environment.json -n 10
     ```
+![](images/13.PNG)
+![](images/14.PNG)
 
 10. La cantidad de CPU consumida es bastante grande y un conjunto considerable de peticiones concurrentes pueden hacer fallar nuestro servicio. Para solucionarlo usaremos una estrategia de Escalamiento Vertical. En Azure diríjase a la sección *size* y a continuación seleccione el tamaño `B2ms`.
 
 ![Imágen 3](images/part1/part1-vm-resize.png)
 
+
+
 11. Una vez el cambio se vea reflejado, repita el paso 7, 8 y 9.
 12. Evalue el escenario de calidad asociado al requerimiento no funcional de escalabilidad y concluya si usando este modelo de escalabilidad logramos cumplirlo.
+
+![](images/15.PNG)
+![](images/16.PNG)
+![](images/17.PNG)
+![](images/18.PNG)
+
 13. Vuelva a dejar la VM en el tamaño inicial para evitar cobros adicionales.
 
 **Preguntas**
 
 1. ¿Cuántos y cuáles recursos crea Azure junto con la VM?
+
+**Rta/:** Al crear una VM en azure, nos proporciona el entorno de la aplicación, el disco de almacenamiento, la red virtual, grupo de seguridad de red, la dirección IP publica, interfaz la Red.
+
 2. ¿Brevemente describa para qué sirve cada recurso?
+
+**Rta/:** 
+**VM:** Ejecuta el sistema operativo y las aplicaciones.
+**Disco de almacenamiento:** Almacena archivos del sistema y datos persistentes.
+**VNet:** Configura una red aislada para la VM.
+**Seguridad de red:** Controla acceso de red según reglas configuradas.
+**IP publica:** Proporciona acceso externo.
+**NIC:**  Permite que la VM se comunique con otros dispositivos en la red.
+
 3. ¿Al cerrar la conexión ssh con la VM, por qué se cae la aplicación que ejecutamos con el comando `npm FibonacciApp.js`? ¿Por qué debemos crear un *Inbound port rule* antes de acceder al servicio?
+
+**Rta/:** El comando npm FibonacciApp.js inicia un proceso que depende de una conexión activa para seguir funcionando; si esta se cierra, la aplicación también se detiene.
+Es necesario crear una regla de puerto de entrada (Inbound port rule) para habilitar el tráfico hacia el puerto 3000, ya que, de manera predeterminada, Azure bloquea el acceso de entrada a todos los puertos. Esta configuración es necesaria para el correcto funcionamiento de la aplicación en la VM.
+
 4. Adjunte tabla de tiempos e interprete por qué la función tarda tando tiempo.
+
+**Rta/:**
+Antes del escalmiento:
+![](images/11.PNG)
+
+Despues del escalamiento:
+![](images/15.PNG)
+
+La función de Fibonacci tarda mucho porque aumenta exponencialmente en complejidad (O(2^n)), especialmente sin la optimización de los tiempos del calculo.
+
 5. Adjunte imágen del consumo de CPU de la VM e interprete por qué la función consume esa cantidad de CPU.
+
+**Rta/:**
+
+Antes del escalamiento:
+![](images/12.PNG)
+
+Despues del escalamiento:
+![](images/16.PNG)
+
+La imagen del consumo de CPU muestra una alta carga durante la ejecución de Fibonacci, lo cual es esperable dado que el cálculo consume recursos intensivamente, sobre todo si no está optimizado.
+
 6. Adjunte la imagen del resumen de la ejecución de Postman. Interprete:
     * Tiempos de ejecución de cada petición.
     * Si hubo fallos documentelos y explique.
+
+**Rta/:**
+
+Antes del escalamiento:
+
+![](images/14.PNG)
+
+Despues del escalamiento:
+
+![](images/17.PNG)
+![](images/18.PNG)
+
+Podemos ver que los tiempos de ejecución no variaron tanto, antes del escalamiento vertical, como despues de este, su variación se dio de  aproximadamente 10 segundos. En cuanto a fallos no se presento ninguno durante la ejecución de Postman.
+
 7. ¿Cuál es la diferencia entre los tamaños `B2ms` y `B1ls` (no solo busque especificaciones de infraestructura)?
+
+**Rta/:**
+
+**B2ms:** tiene más CPU y memoria, soporta cargas más altas y es apto para aplicaciones intensivas.
+**B1ls:** es más básico, con menos capacidad de procesamiento y memoria, adecuado para cargas de trabajo de baja intensidad.
+
 8. ¿Aumentar el tamaño de la VM es una buena solución en este escenario?, ¿Qué pasa con la FibonacciApp cuando cambiamos el tamaño de la VM?
+
+**Rta/:** Esto va a funcionar como una solución temporal, donde va a mejorar el rendimiento de la aplicación, sin embargo, si el flujo de peticiones aumenta de nuevo, vamos a volver a tener el mismo problema que se nos presentaba anteriormente en cuanto a consumo de CPU.
+Cambiar el tamaño implica un reinicio de la VM, lo que puede afectar la disponibilidad.
+
 9. ¿Qué pasa con la infraestructura cuando cambia el tamaño de la VM? ¿Qué efectos negativos implica?
+
+**Rta/:** Se debe reiniciar la maquina por lo que se pierde la conexión SSH y la aplicación deja de estar disponible debido a que debe reasignar recursos.
+
 10. ¿Hubo mejora en el consumo de CPU o en los tiempos de respuesta? Si/No ¿Por qué?
+
+**Rta/:** Si se noto una mejoria, debido a que al cambiar el tamaño, se aumenta la cantidad de CPU y memoria RAM, por lo que la aplicación puede procesar mas peticiones en un menor tiempo.
+
 11. Aumente la cantidad de ejecuciones paralelas del comando de postman a `4`. ¿El comportamiento del sistema es porcentualmente mejor?
+
+**Rta/:** pendiente.
 
 ### Parte 2 - Escalabilidad horizontal
 
@@ -107,21 +208,33 @@ Antes de continuar puede eliminar el grupo de recursos anterior para evitar gast
 
 ![](images/part2/part2-lb-create.png)
 
+![](images/19.PNG)
+
+
 2. A continuación cree un *Backend Pool*, guiese con la siguiente imágen.
 
 ![](images/part2/part2-lb-bp-create.png)
+
+![](images/20.PNG)
 
 3. A continuación cree un *Health Probe*, guiese con la siguiente imágen.
 
 ![](images/part2/part2-lb-hp-create.png)
 
+![](images/21.PNG)
+
 4. A continuación cree un *Load Balancing Rule*, guiese con la siguiente imágen.
 
 ![](images/part2/part2-lb-lbr-create.png)
 
+![](images/22.PNG)
+
 5. Cree una *Virtual Network* dentro del grupo de recursos, guiese con la siguiente imágen.
 
 ![](images/part2/part2-vn-create.png)
+
+![](images/23.PNG)
+![](images/24.PNG)
 
 #### Crear las maquinas virtuales (Nodos)
 
